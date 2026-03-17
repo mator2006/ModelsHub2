@@ -1,6 +1,6 @@
-# AirHub2
+# ModelsHub2
 
-AirHub2 是一个基于 Go + Vue 3 的 AI 网关管理台，用于维护 Key、Upstream、Mapping，并提供日志查询与聊天代理转发能力。
+ModelsHub2 是一个基于 Go + Vue 3 的 AI 网关管理台，用于维护 Key、Upstream、Mapping，并提供日志查询与聊天代理转发能力。
 
 ## 主要功能
 
