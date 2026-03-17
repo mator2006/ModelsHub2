@@ -1,0 +1,55 @@
+services:
+  backend:
+    image: golang:1.22
+    container_name: airhub2-backend
+    working_dir: /workspace/server
+    environment:
+      TZ: ${TZ}
+      AIRHUB_DATA_DIR: /workspace/data
+      GO111MODULE: on
+    command: >
+      sh -lc "
+      /usr/local/go/bin/go env -w GOPROXY=https://proxy.golang.org,direct &&
+      if [ ! -x /go/bin/CompileDaemon ]; then /usr/local/go/bin/go install github.com/githubnemo/CompileDaemon@${COMPILEDAEMON_VERSION:-v1.4.0}; fi &&
+      /go/bin/CompileDaemon \
+      -directory=/workspace/server \
+      -exclude-dir=.git \
+      -exclude-dir=tmp \
+      -build='/usr/local/go/bin/go build -o /tmp/airhub2-server .' \
+      -command='/tmp/airhub2-server' \
+      -polling
+      "
+    ports:
+      - "${BACKEND_PORT}:8080"
+    volumes:
+      - ./:/workspace
+      - go-work:/go
+      - go-build-cache:/root/.cache/go-build
+    restart: unless-stopped
+
+  web:
+    image: node:20-alpine
+    container_name: airhub2-web
+    working_dir: /workspace/web
+    depends_on:
+      - backend
+    environment:
+      TZ: ${TZ}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING}
+      WATCHPACK_POLLING: ${WATCHPACK_POLLING}
+    command: >
+      sh -lc "
+      npm install &&
+      npm run serve -- --host 0.0.0.0 --port ${WEB_PORT}
+      "
+    ports:
+      - "${WEB_PORT}:${WEB_PORT}"
+    volumes:
+      - ./:/workspace
+      - web-node-modules:/workspace/web/node_modules
+    restart: unless-stopped
+
+volumes:
+  go-work:
+  go-build-cache:
+  web-node-modules:
